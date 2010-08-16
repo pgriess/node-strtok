@@ -12,9 +12,9 @@ var TestStream = function(str, min, max) {
     str = str || '';
     min = min || 1;
     max = max || str.length;
-    
+
     var self = this;
-    var buf = new Buffer(str, 'utf-8');
+    var buf = new Buffer(str, 'binary');
 
     var emitData = function() {
         var len = Math.min(
