@@ -9,6 +9,7 @@ var sys = require('sys');
 var TestStream = function(str, min, max) {
     EventEmitter.call(this);
 
+    str = str || '';
     min = min || 1;
     max = max || str.length;
     
