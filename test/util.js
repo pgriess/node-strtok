@@ -27,6 +27,10 @@ var TestStream = function(str, min, max) {
         if (len < buf.length) {
             buf = buf.slice(len, buf.length);
             process.nextTick(emitData);
+        } else {
+            process.nextTick(function() {
+                self.emit('end')
+            });
         }
 
         self.emit('data', b);

@@ -1,5 +1,4 @@
-// Test reading uint8 values in different endiannesses. Regardless, the
-// value should be the same.
+// Verify that the DONE value is respected.
 
 var assert = require('assert');
 var TestStream = require('./util').TestStream;
@@ -13,17 +12,10 @@ strtok.parse(new TestStream(data), function(v) {
         return strtok.UINT8_LE;
     }
 
-    switch (seen++ % 2) {
-    case 0:
-        assert.equal(v, 0x1a);
-        return strtok.UINT8_BE;
-
-    case 1:
-        assert.equal(v, 0x1a);
-        return strtok.UINT8_LE;
-    }
+    seen++;
+    return strtok.DONE;
 });
 
 process.on('exit', function() {
-    assert.equal(data.length, seen);
+    assert.equal(1, seen);
 });

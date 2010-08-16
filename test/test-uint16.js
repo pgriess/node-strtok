@@ -5,8 +5,9 @@ var TestStream = require('./util').TestStream;
 var strtok = require('../lib/strtok');
 
 var seen = 0;
+var data = '\x1a\x00\x1a\x00\x1a\x00\x1a\x00';
 
-strtok.parse(new TestStream('\x1a\x00\x1a\x00\x1a\x00\x1a\x00'), function(v) {
+strtok.parse(new TestStream(data), function(v) {
     if (v === undefined) {
         return strtok.UINT16_LE;
     }
@@ -14,18 +15,14 @@ strtok.parse(new TestStream('\x1a\x00\x1a\x00\x1a\x00\x1a\x00'), function(v) {
     switch (seen++ % 2) {
     case 0:
         assert.equal(v, 0x001a);
-        return (seen < 4) ?
-            strtok.UINT16_BE :
-            strtok.DONE;
+        return strtok.UINT16_BE;
 
     case 1:
         assert.equal(v, 0x1a00);
-        return (seen < 4) ?
-            strtok.UINT16_LE :
-            strtok.DONE;
+        return strtok.UINT16_LE;
     }
 });
 
 process.on('exit', function() {
-    assert.equal(4, seen);
+    assert.equal(data.length / 2, seen);
 });
