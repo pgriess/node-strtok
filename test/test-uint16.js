@@ -1,12 +1,12 @@
 // Test reading uint16 values in different endiannesses.
 
 var assert = require('assert');
-var Stream = require('./stream').Stream;
+var TestStream = require('./util').TestStream;
 var strtok = require('../lib/strtok');
 
 var seen = 0;
 
-strtok.parse(new Stream('\x1a\x00\x1a\x00\x1a\x00\x1a\x00'), function(v) {
+strtok.parse(new TestStream('\x1a\x00\x1a\x00\x1a\x00\x1a\x00'), function(v) {
     if (v === undefined) {
         return strtok.Types.UINT16_LE;
     }

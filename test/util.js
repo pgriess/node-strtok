@@ -6,7 +6,7 @@ var Buffer = require('buffer').Buffer;
 var EventEmitter = require('events').EventEmitter;
 var sys = require('sys');
 
-var Stream = function(str, min, max) {
+var TestStream = function(str, min, max) {
     EventEmitter.call(this);
 
     min = min || 1;
@@ -33,5 +33,5 @@ var Stream = function(str, min, max) {
 
     process.nextTick(emitData);
 };
-sys.inherits(Stream, EventEmitter);
-exports.Stream = Stream;
+sys.inherits(TestStream, EventEmitter);
+exports.TestStream = TestStream;

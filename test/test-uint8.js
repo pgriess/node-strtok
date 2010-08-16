@@ -2,12 +2,12 @@
 // value should be the same.
 
 var assert = require('assert');
-var Stream = require('./stream').Stream;
+var TestStream = require('./util').TestStream;
 var strtok = require('../lib/strtok');
 
 var seen = 0;
 
-strtok.parse(new Stream('\x1a\x1a\x1a\x1a\x1a\x1a'), function(v) {
+strtok.parse(new TestStream('\x1a\x1a\x1a\x1a\x1a\x1a'), function(v) {
     if (v === undefined) {
         return strtok.Types.UINT8_LE;
     }
