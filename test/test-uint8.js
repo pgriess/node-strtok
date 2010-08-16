@@ -9,21 +9,21 @@ var seen = 0;
 
 strtok.parse(new TestStream('\x1a\x1a\x1a\x1a\x1a\x1a'), function(v) {
     if (v === undefined) {
-        return strtok.Types.UINT8_LE;
+        return strtok.UINT8_LE;
     }
 
     switch (seen++ % 2) {
     case 0:
         assert.equal(v, 0x1a);
         return (seen < 6) ?
-            strtok.Types.UINT8_BE :
-            strtok.Types.DONE;
+            strtok.UINT8_BE :
+            strtok.DONE;
 
     case 1:
         assert.equal(v, 0x1a);
         return (seen < 6) ?
-            strtok.Types.UINT8_LE :
-            strtok.Types.DONE;
+            strtok.UINT8_LE :
+            strtok.DONE;
     }
 });
 
