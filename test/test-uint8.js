@@ -12,15 +12,15 @@ strtok.parse(new Stream('\x1a\x1a\x1a\x1a\x1a\x1a'), function(v) {
         return strtok.Types.UINT8_LE;
     }
 
-    switch (seen++ % 1) {
+    switch (seen++ % 2) {
     case 0:
-        assert.ok(v === 0x1a);
+        assert.equal(v, 0x1a);
         return (seen < 6) ?
             strtok.Types.UINT8_BE :
             strtok.Types.DONE;
 
     case 1:
-        assert.ok(v === 0x1a);
+        assert.equal(v, 0x1a);
         return (seen < 6) ?
             strtok.Types.UINT8_LE :
             strtok.Types.DONE;
