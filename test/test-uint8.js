@@ -1,4 +1,4 @@
-// Test reading uint8 values in different endiannesses.
+// Test reading uint8 values.
 
 var assert = require('assert');
 var util = require('./util');
