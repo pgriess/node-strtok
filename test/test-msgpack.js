@@ -11,7 +11,10 @@ var data = '\x25' +                         // fixnum(37)
            '\xcc\xff' +                     // uint8(255)
            '\xcd\x01\x01' +                 // uint16(257)
            '\xce\x01\x01\x01\x01' +         // uint32(16843009)
-           '\x93\x78\x0a\xcc\xef';          // array([120, 10, 239])
+           '\x93\x78\x0a\xcc\xef' +         // array([120, 10, 239])
+           '\xc0' +                         // nil
+           '\xc3' +                         // true
+           '\xc2';                          // false
 
 // Accumulate a top-level MsgPack value
 var valuesSeen = 0;
@@ -56,6 +59,20 @@ var accMsgPack = function(v) {
         assert.ok(Array.isArray(v));
         assert.equal(v.length, 3);
         assert.deepEqual(v, [120, 10, 239]);
+        break;
+
+    case 8:
+        assert.strictEqual(v, undefined);
+        break;
+
+    case 9:
+        assert.strictEqual(typeof v, 'boolean');
+        assert.strictEqual(v, true);
+        break;
+
+    case 10:
+        assert.strictEqual(typeof v, 'boolean');
+        assert.strictEqual(v, false);
         break;
 
     default:
@@ -116,7 +133,22 @@ strtok.parse(new TestStream(data), (function(acc) {
             if (v == 0xce) {
                 type = MSGPACK_UINT32;
                 return strtok.UINT32_BE;
-            } 
+            }
+
+            if (v == 0xc0) {
+                acc(undefined);
+                break;
+            }
+
+            if (v == 0xc3) {
+                acc(true);
+                break;
+            }
+
+            if (v == 0xc2) {
+                acc(false);
+                break;
+            }
 
             // fix array
             if ((v & 0x90) === 0x90) {
@@ -160,5 +192,5 @@ strtok.parse(new TestStream(data), (function(acc) {
 })(accMsgPack));
 
 process.on('exit', function() {
-    assert.equal(valuesSeen, 8);
+    assert.equal(valuesSeen, 11);
 });
