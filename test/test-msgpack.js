@@ -14,45 +14,49 @@ var data = '\x25' +                         // fixnum(37)
            '\x93\x78\x0a\xcc\xef' +         // array([120, 10, 239])
            '\xc0' +                         // nil
            '\xc3' +                         // true
-           '\xc2';                          // false
+           '\xc2' +                         // false
+           '\xd0\xff' +                     // int8(-1)
+           '\xd0\x80' +                     // int8(-128)
+           '\xd0\x70' +                     // int8(112)
+           '\xd1\xff\xff' +                 // int16(-1)
+           '\xd1\x80\x00' +                 // int16(-32768)
+           '\xd1\x01\x00' +                 // int16(256)
+           '\xd2\x00\x00\x00\x00' +         // int32(0)
+           '\xd2\x00\x00\xff\xff' +         // int32(65535)
+           '\xd2\x80\x00\x00\x00' +         // int32(-2147483648)
+           '\xd2\x80\xff\xff\xff' +         // int32(-2130706433)
+           '';
 
 // Accumulate a top-level MsgPack value
 var valuesSeen = 0;
 var accMsgPack = function(v) {
     switch (valuesSeen++) {
     case 0:
-        assert.strictEqual(typeof v, 'number');
-        assert.equal(v, 37);
+        assert.strictEqual(v, 37);
         break;
 
     case 1:
-        assert.strictEqual(typeof v, 'number');
-        assert.equal(v, 111);
+        assert.strictEqual(v, 111);
         break;
 
     case 2:
-        assert.strictEqual(typeof v, 'number');
-        assert.equal(v, -32);
+        assert.strictEqual(v, -32);
         break;
 
     case 3:
-        assert.strictEqual(typeof v, 'number');
-        assert.equal(v, -12);
+        assert.strictEqual(v, -12);
         break;
 
     case 4:
-        assert.strictEqual(typeof v, 'number');
-        assert.equal(v, 255);
+        assert.strictEqual(v, 255);
         break;
 
     case 5:
-        assert.strictEqual(typeof v, 'number');
-        assert.equal(v, 257);
+        assert.strictEqual(v, 257);
         break;
 
     case 6:
-        assert.strictEqual(typeof v, 'number');
-        assert.equal(v, 16843009);
+        assert.strictEqual(v, 16843009);
         break;
 
     case 7:
@@ -66,13 +70,51 @@ var accMsgPack = function(v) {
         break;
 
     case 9:
-        assert.strictEqual(typeof v, 'boolean');
         assert.strictEqual(v, true);
         break;
 
     case 10:
-        assert.strictEqual(typeof v, 'boolean');
         assert.strictEqual(v, false);
+        break;
+
+    case 11:
+        assert.strictEqual(v, -1);
+        break;
+
+    case 12:
+        assert.strictEqual(v, -128);
+        break;
+
+    case 13:
+        assert.strictEqual(v, 112);
+        break;
+
+    case 14:
+        assert.strictEqual(v, -1);
+        break;
+
+    case 15:
+        assert.strictEqual(v, -32768);
+        break;
+
+    case 16:
+        assert.strictEqual(v, 256);
+        break;
+
+    case 17:
+        assert.strictEqual(v, 0);
+        break;
+
+    case 18:
+        assert.strictEqual(v, 65535);
+        break;
+
+    case 19:
+        assert.strictEqual(v, -2147483648);
+        break;
+
+    case 20:
+        assert.strictEqual(v, -2130706433);
         break;
 
     default:
@@ -89,6 +131,9 @@ strtok.parse(new TestStream(data), (function(acc) {
     var MSGPACK_UINT8 = 0;
     var MSGPACK_UINT16 = 1;
     var MSGPACK_UINT32 = 2;
+    var MSGPACK_INT8 = 3;
+    var MSGPACK_INT16 = 4;
+    var MSGPACK_INT32 = 5;
 
     // Parse a single primitive value, calling acc() as values
     // are accumulated
@@ -135,19 +180,40 @@ strtok.parse(new TestStream(data), (function(acc) {
                 return strtok.UINT32_BE;
             }
 
+            // nil/undefined
             if (v == 0xc0) {
                 acc(undefined);
                 break;
             }
 
+            // true
             if (v == 0xc3) {
                 acc(true);
                 break;
             }
 
+            // false
             if (v == 0xc2) {
                 acc(false);
                 break;
+            }
+
+            // int8
+            if (v == 0xd0) {
+                type = MSGPACK_INT8;
+                return strtok.INT8;
+            }
+
+            // int16
+            if (v == 0xd1) {
+                type = MSGPACK_INT16;
+                return strtok.INT16_BE;
+            }
+
+            // int32
+            if (v == 0xd2) {
+                type = MSGPACK_INT32;
+                return strtok.INT32_BE;
             }
 
             // fix array
@@ -171,16 +237,11 @@ strtok.parse(new TestStream(data), (function(acc) {
             return strtok.DONE;
 
         case MSGPACK_UINT8:
-            acc(v);
-            type = undefined;
-            break;
-
         case MSGPACK_UINT16:
-            acc(v);
-            type = undefined;
-            break;
-
         case MSGPACK_UINT32:
+        case MSGPACK_INT8:
+        case MSGPACK_INT16:
+        case MSGPACK_INT32:
             acc(v);
             type = undefined;
             break;
@@ -192,5 +253,5 @@ strtok.parse(new TestStream(data), (function(acc) {
 })(accMsgPack));
 
 process.on('exit', function() {
-    assert.equal(valuesSeen, 11);
+    assert.equal(valuesSeen, 21);
 });
