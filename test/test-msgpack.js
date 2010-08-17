@@ -4,7 +4,13 @@ var assert = require('assert');
 var TestStream = require('./util').TestStream;
 var strtok = require('../lib/strtok');
 
-var data = '\x25\x6f\xff\xeb\xcc\xff\xcd\x01\x01\xce\x01\x01\x01\x01';
+var data = '\x25' +                         // fixnum(37)
+           '\x6f' +                         // fixnum(11)
+           '\xff' +                         // negative_fixnum(-32)
+           '\xeb' +                         // negative_fixnum(-12)
+           '\xcc\xff' +                     // uint8(255)
+           '\xcd\x01\x01' +                 // uint16(257)
+           '\xce\x01\x01\x01\x01';          // uint32(16843009)
 
 // Accumulate a top-level MsgPack value
 var valuesSeen = 0;
