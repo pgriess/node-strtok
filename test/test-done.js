@@ -7,7 +7,7 @@ var strtok = require('../lib/strtok');
 util.runTest('\x1a\x1a\x1a\x1a\x1a\x1a', [
     function(v) {
         assert.ok(v === undefined);
-        return strtok.UINT8_LE;
+        return strtok.UINT8;
     },
     function(v) {
         return strtok.DONE;

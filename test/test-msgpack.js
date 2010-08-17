@@ -57,7 +57,7 @@ strtok.parse(new TestStream(data), (function() {
 
     return function(v) {
         if (v === undefined) {
-            return strtok.UINT8_BE;
+            return strtok.UINT8;
         }
 
         switch (state) {
@@ -72,7 +72,7 @@ strtok.parse(new TestStream(data), (function() {
                 // uint8
                 assert.ok(state === undefined);
                 state = MSGPACK_UINT8;
-                return strtok.UINT8_BE;
+                return strtok.UINT8;
             } else if (v == 0xcd) {
                 // uint16
                 assert.ok(state === undefined);
@@ -87,22 +87,22 @@ strtok.parse(new TestStream(data), (function() {
                 console.error('Unexpected type: ' + v);
             }
 
-            return strtok.UINT8_BE;
+            return strtok.UINT8;
 
         case MSGPACK_UINT8:
             accMsgPack(v);
             state = undefined;
-            return strtok.UINT8_BE;
+            return strtok.UINT8;
 
         case MSGPACK_UINT16:
             accMsgPack(v);
             state = undefined;
-            return strtok.UINT8_BE;
+            return strtok.UINT8;
 
         case MSGPACK_UINT32:
             accMsgPack(v);
             state = undefined;
-            return strtok.UINT8_BE;
+            return strtok.UINT8;
         }
     };
 })());

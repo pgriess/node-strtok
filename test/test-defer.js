@@ -8,7 +8,7 @@ var f = function(v, cb) {
     assert.equal(v, 0x1a);
 
     process.nextTick(function() {
-        cb(strtok.UINT8_BE)
+        cb(strtok.UINT8)
     });
 
     return strtok.DEFER;
@@ -17,7 +17,7 @@ var f = function(v, cb) {
 util.runTest('\x1a\x1a\x1a\x1a\x1a\x1a', [
     function(v) {
         assert.ok(v === undefined);
-        return strtok.UINT8_LE;
+        return strtok.UINT8;
     },
     f, f, f, f, f, f
 ]);

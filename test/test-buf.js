@@ -7,7 +7,7 @@ var strtok = require('../lib/strtok');
 util.runTest('\x05peter', [
     function(v) {
         assert.ok(v === undefined);
-        return strtok.UINT8_BE;
+        return strtok.UINT8;
     },
     function(v) {
         assert.ok(typeof v === 'number');
