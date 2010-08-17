@@ -1,29 +1,21 @@
 // Test reading an array of bytes.
 
 var assert = require('assert');
-var TestStream = require('./util').TestStream;
+var util = require('./util');
 var strtok = require('../lib/strtok');
 
-var state = 0;
-
-strtok.parse(new TestStream('\x05peter'), function(v) {
-    if (v === undefined) {
+util.runTest('\x05peter', [
+    function(v) {
+        assert.ok(v === undefined);
         return strtok.UINT8_BE;
-    }
-
-    switch (state) {
-    case 0:
-        state = 1;
+    },
+    function(v) {
+        assert.ok(typeof v === 'number');
         return new strtok.BufferType(v);
-
-    case 1:
-        state = 2;
+    },
+    function(v) {
         assert.ok(typeof v === 'object');
         assert.equal(v.toString('utf-8'), 'peter');
         return strtok.DONE;
     }
-});
-
-process.on('exit', function() {
-    assert.equal(2, state);
-});
+]);
