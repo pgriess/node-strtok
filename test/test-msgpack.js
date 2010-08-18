@@ -11,7 +11,7 @@ var data = '\x25' +                         // fixnum(37)
            '\xcc\xff' +                     // uint8(255)
            '\xcd\x01\x01' +                 // uint16(257)
            '\xce\x01\x01\x01\x01' +         // uint32(16843009)
-           '\x93\x78\x0a\xcc\xef' +         // array([120, 10, 239])
+           '\x93\x78\x0a\xcc\xef' +         // fixarray([120, 10, 239])
            '\xc0' +                         // nil
            '\xc3' +                         // true
            '\xc2' +                         // false
@@ -25,6 +25,8 @@ var data = '\x25' +                         // fixnum(37)
            '\xd2\x00\x00\xff\xff' +         // int32(65535)
            '\xd2\x80\x00\x00\x00' +         // int32(-2147483648)
            '\xd2\x80\xff\xff\xff' +         // int32(-2130706433)
+           '\xdc\x00\x01\x25' +             // array16([37])
+           '\xdc\x00\x03\xff\x25\xcc\xff' + // array16([-32, 37, 255])
            '';
 
 // Accumulate a top-level MsgPack value
@@ -117,6 +119,18 @@ var accMsgPack = function(v) {
         assert.strictEqual(v, -2130706433);
         break;
 
+    case 21:
+        assert.ok(Array.isArray(v));
+        assert.equal(v.length, 1);
+        assert.deepEqual(v, [37]);
+        break;
+
+    case 22:
+        assert.ok(Array.isArray(v));
+        assert.equal(v.length, 3);
+        assert.deepEqual(v, [-32, 37, 255]);
+        break;
+
     default:
         console.error('unexpected value: ' + JSON.stringify(v));
     }
@@ -134,6 +148,21 @@ strtok.parse(new TestStream(data), (function(acc) {
     var MSGPACK_INT8 = 3;
     var MSGPACK_INT16 = 4;
     var MSGPACK_INT32 = 5;
+    var MSGPACK_ARRAY16 = 6;
+
+    // Return a function for unpacking an array
+    var unpackArray = function(nvals, oldAcc) {
+        var arr = [];
+
+        return function(v) {
+            arr.push(v);
+
+            if (arr.length >= nvals) {
+                acc = oldAcc;
+                acc(arr);
+            }
+        };
+    };
 
     // Parse a single primitive value, calling acc() as values
     // are accumulated
@@ -151,13 +180,13 @@ strtok.parse(new TestStream(data), (function(acc) {
             // complex type.
 
             // positive fixnum
-            if ((v & 0x80) === 0x0) {
+            if ((v & 0x80) == 0x0) {
                 acc(v);
                 break;
             }
 
             // negative fixnum
-            if ((v & 0xe0) === 0xe0) {
+            if ((v & 0xe0) == 0xe0) {
                 acc(-1 * ((v & ~0xe0) + 1));
                 break;
             }
@@ -217,20 +246,15 @@ strtok.parse(new TestStream(data), (function(acc) {
             }
 
             // fix array
-            if ((v & 0x90) === 0x90) {
-                acc = (function(nvals, oldAcc) {
-                    var arr = [];
-
-                    return function(v) {
-                        arr.push(v);
-
-                        if (arr.length >= nvals) {
-                            acc = oldAcc;
-                            acc(arr);
-                        }
-                    };
-                })(v & 0x0f, acc);
+            if ((v & 0xf0) === 0x90) {
+                acc = unpackArray(v & 0x0f, acc);
                 break;
+            }
+
+            // array16
+            if (v == 0xdc) {
+                type = MSGPACK_ARRAY16;
+                return strtok.UINT16_BE;
             }
 
             console.error('unexpected type: ' + v + '; aborting');
@@ -245,6 +269,11 @@ strtok.parse(new TestStream(data), (function(acc) {
             acc(v);
             type = undefined;
             break;
+
+        case MSGPACK_ARRAY16:
+            acc = unpackArray(v, acc);
+            type = undefined;
+            break;
         }
 
         // We're reading a new primitive; go get it
@@ -253,5 +282,5 @@ strtok.parse(new TestStream(data), (function(acc) {
 })(accMsgPack));
 
 process.on('exit', function() {
-    assert.equal(valuesSeen, 21);
+    assert.equal(valuesSeen, 23);
 });
