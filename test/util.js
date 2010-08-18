@@ -44,17 +44,23 @@ var TestStream = function(str, min, max) {
 sys.inherits(TestStream, EventEmitter);
 exports.TestStream = TestStream;
 
-// Run the given data through a TestStream and check it using the given
-// table of state transitions.
-var runTest = function(data, stateTab) {
-    var ts = new TestStream(data);
+// Run the given stream (or string, coverted into a TestStream) through
+// strtok,parse() and verify types that come back using the given state
+// table.
+var runTest = function(s, stateTab) {
+    if (typeof s === 'string') {
+        s = new TestStream(s);
+    }
+
+    assert.equal(typeof s, 'object');
+    
     var state = 0;
 
     process.on('exit', function() {
         assert.equal(stateTab.length, state);
     });
 
-    strtok.parse(ts, function(v, cb) {
+    strtok.parse(s, function(v, cb) {
         assert.ok(state >= 0 && state < stateTab.length);
         return stateTab[state++](v, cb);
     });
