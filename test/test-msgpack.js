@@ -27,6 +27,8 @@ var data = '\x25' +                         // fixnum(37)
            '\xd2\x80\xff\xff\xff' +         // int32(-2130706433)
            '\xdc\x00\x01\x25' +             // array16([37])
            '\xdc\x00\x03\xff\x25\xcc\xff' + // array16([-32, 37, 255])
+           '\xdd\x00\x00\x00\x01\x25' +     // array32([37])
+           '\xdd\x00\x00\x00\x03\xff\x25\xcc\xff' + // array32([-32, 37, 255])
            '';
 
 // Accumulate a top-level MsgPack value
@@ -131,6 +133,18 @@ var accMsgPack = function(v) {
         assert.deepEqual(v, [-32, 37, 255]);
         break;
 
+    case 23:
+        assert.ok(Array.isArray(v));
+        assert.equal(v.length, 1);
+        assert.deepEqual(v, [37]);
+        break;
+
+    case 24:
+        assert.ok(Array.isArray(v));
+        assert.equal(v.length, 3);
+        assert.deepEqual(v, [-32, 37, 255]);
+        break;
+
     default:
         console.error('unexpected value: ' + JSON.stringify(v));
     }
@@ -149,6 +163,7 @@ strtok.parse(new TestStream(data), (function(acc) {
     var MSGPACK_INT16 = 4;
     var MSGPACK_INT32 = 5;
     var MSGPACK_ARRAY16 = 6;
+    var MSGPACK_ARRAY32 = 7;
 
     // Return a function for unpacking an array
     var unpackArray = function(nvals, oldAcc) {
@@ -257,6 +272,12 @@ strtok.parse(new TestStream(data), (function(acc) {
                 return strtok.UINT16_BE;
             }
 
+            // array32
+            if (v == 0xdd) {
+                type = MSGPACK_ARRAY32;
+                return strtok.UINT32_BE;
+            }
+
             console.error('unexpected type: ' + v + '; aborting');
             return strtok.DONE;
 
@@ -271,6 +292,7 @@ strtok.parse(new TestStream(data), (function(acc) {
             break;
 
         case MSGPACK_ARRAY16:
+        case MSGPACK_ARRAY32:
             acc = unpackArray(v, acc);
             type = undefined;
             break;
@@ -282,5 +304,5 @@ strtok.parse(new TestStream(data), (function(acc) {
 })(accMsgPack));
 
 process.on('exit', function() {
-    assert.equal(valuesSeen, 23);
+    assert.equal(valuesSeen, 25);
 });
