@@ -29,6 +29,9 @@ var data = '\x25' +                         // fixnum(37)
            '\xdc\x00\x03\xff\x25\xcc\xff' + // array16([-32, 37, 255])
            '\xdd\x00\x00\x00\x01\x25' +     // array32([37])
            '\xdd\x00\x00\x00\x03\xff\x25\xcc\xff' + // array32([-32, 37, 255])
+           '\xa3\x01\x02\x03' +             // fixraw([0x01, 0x02, 0x03])
+           '\xda\x00\x03\x01\x02\x03' +     // raw16([0x01, 0x02, 0x03])
+           '\xdb\x00\x00\x00\x03\x01\x02\x03' + // raw32([0x01, 0x02, 0x03])
            '';
 
 // Accumulate a top-level MsgPack value
@@ -145,6 +148,14 @@ var accMsgPack = function(v) {
         assert.deepEqual(v, [-32, 37, 255]);
         break;
 
+    case 25:
+    case 26:
+    case 27:
+        assert.strictEqual(typeof v, 'object');
+        assert.equal(v.length, 3);
+        assert.deepEqual(v.toString('binary'), '\x01\x02\x03');
+        break;
+
     default:
         console.error('unexpected value: ' + JSON.stringify(v));
     }
@@ -164,6 +175,10 @@ strtok.parse(new TestStream(data), (function(acc) {
     var MSGPACK_INT32 = 5;
     var MSGPACK_ARRAY16 = 6;
     var MSGPACK_ARRAY32 = 7;
+    var MSGPACK_RAW = 8;
+    var MSGPACK_RAW16 = 9;
+    var MSGPACK_RAW32 = 10;
+    var MSGPACK_RAW_FINISH = 11;
 
     // Return a function for unpacking an array
     var unpackArray = function(nvals, oldAcc) {
@@ -278,6 +293,24 @@ strtok.parse(new TestStream(data), (function(acc) {
                 return strtok.UINT32_BE;
             }
 
+            // fixraw
+            if ((v & 0xe0) == 0xa0) {
+                type = MSGPACK_RAW;
+                return new strtok.BufferType(v & ~0xe0)
+            }
+
+            // raw16
+            if (v == 0xda) {
+                type = MSGPACK_RAW16;
+                return strtok.UINT16_BE;
+            }
+
+            // raw32
+            if (v == 0xdb) {
+                type = MSGPACK_RAW32;
+                return strtok.UINT32_BE;
+            }
+
             console.error('unexpected type: ' + v + '; aborting');
             return strtok.DONE;
 
@@ -296,6 +329,22 @@ strtok.parse(new TestStream(data), (function(acc) {
             acc = unpackArray(v, acc);
             type = undefined;
             break;
+
+        case MSGPACK_RAW:
+            acc(v);
+            type = undefined;
+            break;
+
+        case MSGPACK_RAW16:
+        case MSGPACK_RAW32:
+            type = MSGPACK_RAW_FINISH;
+            return new strtok.BufferType(v);
+            break;
+
+        case MSGPACK_RAW_FINISH:
+            acc(v);
+            type = undefined;
+            break;
         }
 
         // We're reading a new primitive; go get it
@@ -304,5 +353,5 @@ strtok.parse(new TestStream(data), (function(acc) {
 })(accMsgPack));
 
 process.on('exit', function() {
-    assert.equal(valuesSeen, 25);
+    assert.equal(valuesSeen, 28);
 });
