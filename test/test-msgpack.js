@@ -5,7 +5,7 @@ var TestStream = require('./util').TestStream;
 var strtok = require('../lib/strtok');
 
 var data = '\x25' +                         // fixnum(37)
-           '\x6f' +                         // fixnum(11)
+           '\x6f' +                         // fixnum(111)
            '\xff' +                         // negative_fixnum(-32)
            '\xeb' +                         // negative_fixnum(-12)
            '\xcc\xff' +                     // uint8(255)
@@ -32,6 +32,9 @@ var data = '\x25' +                         // fixnum(37)
            '\xa3\x01\x02\x03' +             // fixraw([0x01, 0x02, 0x03])
            '\xda\x00\x03\x01\x02\x03' +     // raw16([0x01, 0x02, 0x03])
            '\xdb\x00\x00\x00\x03\x01\x02\x03' + // raw32([0x01, 0x02, 0x03])
+           '\x81\x25\x6f' +                 // fixmap({37 : 111})
+           '\xde\x00\x01\x25\x6f' +         // map16({37 : 111})
+           '\xdf\x00\x00\x00\x01\x25\x6f' + // map32({37 : 111})
            '';
 
 // Accumulate a top-level MsgPack value
@@ -156,6 +159,13 @@ var accMsgPack = function(v) {
         assert.deepEqual(v.toString('binary'), '\x01\x02\x03');
         break;
 
+    case 28:
+    case 29:
+    case 30:
+        assert.strictEqual(typeof v, 'object');
+        assert.deepEqual(v, {37 : 111});
+        break;
+
     default:
         console.error('unexpected value: ' + JSON.stringify(v));
     }
@@ -179,6 +189,8 @@ strtok.parse(new TestStream(data), (function(acc) {
     var MSGPACK_RAW16 = 9;
     var MSGPACK_RAW32 = 10;
     var MSGPACK_RAW_FINISH = 11;
+    var MSGPACK_MAP16 = 12;
+    var MSGPACK_MAP32 = 13;
 
     // Return a function for unpacking an array
     var unpackArray = function(nvals, oldAcc) {
@@ -190,6 +202,26 @@ strtok.parse(new TestStream(data), (function(acc) {
             if (arr.length >= nvals) {
                 acc = oldAcc;
                 acc(arr);
+            }
+        };
+    };
+
+    // Return a function for unpacking a map
+    var unpackMap = function(nvals, oldAcc) {
+        var arr = [];
+
+        return function(v) {
+            arr.push(v);
+
+            if (arr.length >= 2 * nvals) {
+                var map = {};
+
+                for (var i = 0; i < nvals; i++) {
+                    map[arr[2 * i]] = arr[2 * i + 1];
+                }
+
+                acc = oldAcc;
+                acc(map);
             }
         };
     };
@@ -311,6 +343,24 @@ strtok.parse(new TestStream(data), (function(acc) {
                 return strtok.UINT32_BE;
             }
 
+            // fixmap
+            if ((v & 0xf0) == 0x80) {
+                acc = unpackMap(v & 0x0f, acc);
+                break;
+            }
+
+            // map16
+            if (v == 0xde) {
+                type = MSGPACK_MAP16;
+                return strtok.UINT16_BE;
+            }
+
+            // map32
+            if (v == 0xdf) {
+                type = MSGPACK_MAP32;
+                return strtok.UINT32_BE;
+            }
+
             console.error('unexpected type: ' + v + '; aborting');
             return strtok.DONE;
 
@@ -345,6 +395,12 @@ strtok.parse(new TestStream(data), (function(acc) {
             acc(v);
             type = undefined;
             break;
+
+        case MSGPACK_MAP16:
+        case MSGPACK_MAP32:
+            acc = unpackMap(v, acc);
+            type = undefined;
+            break;
         }
 
         // We're reading a new primitive; go get it
@@ -353,5 +409,5 @@ strtok.parse(new TestStream(data), (function(acc) {
 })(accMsgPack));
 
 process.on('exit', function() {
-    assert.equal(valuesSeen, 28);
+    assert.equal(valuesSeen, 31);
 });
