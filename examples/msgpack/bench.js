@@ -29,14 +29,14 @@ var f = function(i, useNative, cb) {
     if (useNative) {
         s.on('data', function(b) {
             var v = nodeMsgpack.unpack(b);
-            // assert.deepEqual(v, o);
+            assert.deepEqual(v, o);
             f(i + 1, useNative, cb);
         });
     } else {
         strtok.parse(
             s,
             strtokMsgpack.parser(function(v) {
-                // assert.deepEqual(v, o);
+                assert.deepEqual(v, o);
                 f(i + 1, useNative, cb);
             })
         );
