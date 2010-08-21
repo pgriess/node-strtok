@@ -1,8 +1,21 @@
-// Test reading uint16 values in different endiannesses.
+// Test writing and reading uint16 values in different endiannesses.
 
 var assert = require('assert');
 var util = require('./util');
 var strtok = require('../lib/strtok');
+
+util.runGenerateTests(
+    [function(s) {
+        strtok.UINT16_LE.put(s, 0xffaa)
+    }, '\xaa\xff'],
+    [function(s) {
+        strtok.UINT16_BE.put(s, 0xffaa)
+    }, '\xff\xaa'],
+    [function(s) {
+        strtok.UINT16_BE.put(s, 0xffaa)
+        strtok.UINT16_LE.put(s, 0xffaa)
+    }, '\xff\xaa\xaa\xff']
+);
 
 var le = function(v) {
     assert.equal(v, 0x001a);
