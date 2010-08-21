@@ -47,25 +47,26 @@ var parser = function(acc) {
 
     // Return a function for unpacking a map
     var unpackMap = function(nvals, oldAcc) {
-        var arr = [];
+        var o = {};
+        var k = undefined;
+        var numKeys = 0;
 
         if (nvals === 0) {
-            acc({});
+            acc(o);
             return oldAcc;
         }
 
         return function(v) {
-            arr.push(v);
+            if (k === undefined) {
+                k = v;
+                return;
+            }
 
-            if (arr.length >= 2 * nvals) {
-                var map = {};
+            o[k] = v;
 
-                for (var i = 0; i < nvals; i++) {
-                    map[arr[2 * i]] = arr[2 * i + 1];
-                }
-
+            if (++numKeys === nvals) {
                 acc = oldAcc;
-                acc(map);
+                acc(o);
             }
         };
     };
