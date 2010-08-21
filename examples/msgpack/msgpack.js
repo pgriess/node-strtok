@@ -30,6 +30,11 @@ var parser = function(acc) {
     var unpackArray = function(nvals, oldAcc) {
         var arr = [];
 
+        if (nvals === 0) {
+            acc(arr);
+            return oldAcc;
+        }
+
         return function(v) {
             arr.push(v);
 
@@ -43,6 +48,11 @@ var parser = function(acc) {
     // Return a function for unpacking a map
     var unpackMap = function(nvals, oldAcc) {
         var arr = [];
+
+        if (nvals === 0) {
+            acc({});
+            return oldAcc;
+        }
 
         return function(v) {
             arr.push(v);
