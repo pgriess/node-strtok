@@ -26,6 +26,9 @@ var parser = function(acc) {
     var MSGPACK_MAP16 = 12;
     var MSGPACK_MAP32 = 13;
 
+    // Unpack a binary string
+    var rawStringType = new strtok.StringType(0, 'binary');
+
     // Return a function for unpacking an array
     var unpackArray = function(nvals, oldAcc) {
         var arr = [];
@@ -173,7 +176,8 @@ var parser = function(acc) {
             // fixraw
             if ((v & 0xe0) == 0xa0) {
                 type = MSGPACK_RAW;
-                return new strtok.BufferType(v & ~0xe0)
+                rawStringType.len = v & ~0xe0;
+                return rawStringType;
             }
 
             // raw16
@@ -230,8 +234,8 @@ var parser = function(acc) {
         case MSGPACK_RAW16:
         case MSGPACK_RAW32:
             type = MSGPACK_RAW_FINISH;
-            return new strtok.BufferType(v);
-            break;
+            rawStringType.len = v;
+            return rawStringType;
 
         case MSGPACK_MAP16:
         case MSGPACK_MAP32:
