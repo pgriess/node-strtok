@@ -38,15 +38,15 @@ var TESTS = [
     ],
     [                                           // fixraw
         '\xa3\x01\x02\x03',
-        new Buffer('\x01\x02\x03', 'binary')
+        '\x01\x02\x03'
     ],
     [                                           // raw16
         '\xda\x00\x03\x01\x02\x03',
-        new Buffer('\x01\x02\x03', 'binary')
+        '\x01\x02\x03'
     ],
     [                                           // raw32
         '\xdb\x00\x00\x00\x03\x01\x02\x03',
-        new Buffer('\x01\x02\x03', 'binary')
+        '\x01\x02\x03',
     ],
     ['\x81\x25\x6f', {37 : 111}],               // fixmap
     ['\xde\x00\x01\x25\x6f', {37 : 111}],       // map16
