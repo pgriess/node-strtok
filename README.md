@@ -42,3 +42,9 @@ value read earlier.
         console.log('Read ' + v.toString('ascii'));
         numBytes = -1;
     });
+
+## Performance
+
+The MsgPack parser included in `examles/msgpack/msgpack.js` is only 30% or so
+slower than `node-msgpack` when unpacking `{'abcdef' : 1, 'qqq' : 13, '19' :
+[1, 2, 3, 4]}`.
