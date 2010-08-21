@@ -6,11 +6,13 @@ var strtok = require('../lib/strtok');
 
 util.runGenerateTests(
     [function(s) {
+        strtok.UINT16_LE.put(s, 0);
         strtok.UINT16_LE.put(s, 0xffaa)
-    }, '\xaa\xff'],
+    }, '\x00\x00\xaa\xff'],
     [function(s) {
+        strtok.UINT16_BE.put(s, 0xf);
         strtok.UINT16_BE.put(s, 0xffaa)
-    }, '\xff\xaa'],
+    }, '\x00\x0f\xff\xaa'],
     [function(s) {
         strtok.UINT16_BE.put(s, 0xffaa)
         strtok.UINT16_LE.put(s, 0xffaa)
