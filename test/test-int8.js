@@ -4,7 +4,7 @@ var assert = require('assert');
 var util = require('./util');
 var strtok = require('../lib/strtok');
 
-util.runTest('\x00\x7f\x80\xff\x81', [
+util.runParseTests('\x00\x7f\x80\xff\x81', [
     function(v) {
         assert.ok(v === undefined);
         return strtok.INT8;

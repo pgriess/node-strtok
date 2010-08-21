@@ -14,7 +14,7 @@ var be = function(v) {
     return strtok.UINT16_LE;
 };
 
-util.runTest('\x1a\x00\x1a\x00\x1a\x00\x1a\x00', [
+util.runParseTests('\x1a\x00\x1a\x00\x1a\x00\x1a\x00', [
     function(v) {
         assert.ok(v === undefined);
         return strtok.UINT16_LE;

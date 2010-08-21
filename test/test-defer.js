@@ -14,7 +14,7 @@ var f = function(v, cb) {
     return strtok.DEFER;
 };
 
-util.runTest('\x1a\x1a\x1a\x1a\x1a\x1a', [
+util.runParseTests('\x1a\x1a\x1a\x1a\x1a\x1a', [
     function(v) {
         assert.ok(v === undefined);
         return strtok.UINT8;

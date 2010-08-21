@@ -14,7 +14,7 @@ var be = function(v) {
     return strtok.UINT32_LE;
 };
 
-util.runTest(
+util.runParseTests(
     '\x1a\x00\x1a\x00\x1a\x00\x1a\x00\x1a\x00\x1a\x00\x1a\x00\x1a\x00',
     [
         function(v) {

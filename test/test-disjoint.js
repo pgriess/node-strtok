@@ -19,7 +19,7 @@ var TESTTAB = [
 
 // A net.Stream workalike that emits the indefinitely repeating string
 // '\x01\x02\x03\x04' in chunks specified by the 'lens' array param.
-var TestStream = function(lens) {
+var SourceStream = function(lens) {
     EventEmitter.call(this);
 
     var self = this;
@@ -54,7 +54,7 @@ var TestStream = function(lens) {
 
     process.nextTick(emitData);
 };
-sys.inherits(TestStream, EventEmitter);
+sys.inherits(SourceStream, EventEmitter);
 
 var run = function() {
     if (TESTTAB.length == 0) {
@@ -62,7 +62,7 @@ var run = function() {
     }
     
     var t = TESTTAB.shift();
-    var s = new TestStream(t);
+    var s = new SourceStream(t);
 
     var stateTab = [
         function(v) {
@@ -84,7 +84,7 @@ var run = function() {
         return strtok.DONE;
     });
 
-    util.runTest(s, stateTab);
+    util.runParseTests(s, stateTab);
 };
 
 run();
