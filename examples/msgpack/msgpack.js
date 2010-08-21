@@ -204,6 +204,8 @@ var parser = function(acc) {
         case MSGPACK_INT8:
         case MSGPACK_INT16:
         case MSGPACK_INT32:
+        case MSGPACK_RAW:
+        case MSGPACK_RAW_FINISH:
             acc(v);
             type = undefined;
             break;
@@ -214,20 +216,10 @@ var parser = function(acc) {
             type = undefined;
             break;
 
-        case MSGPACK_RAW:
-            acc(v);
-            type = undefined;
-            break;
-
         case MSGPACK_RAW16:
         case MSGPACK_RAW32:
             type = MSGPACK_RAW_FINISH;
             return new strtok.BufferType(v);
-            break;
-
-        case MSGPACK_RAW_FINISH:
-            acc(v);
-            type = undefined;
             break;
 
         case MSGPACK_MAP16:
