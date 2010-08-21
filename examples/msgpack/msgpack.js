@@ -66,6 +66,7 @@ var parser = function(acc) {
             }
 
             o[k] = v;
+            k = undefined;
 
             if (++numKeys === nvals) {
                 acc = oldAcc;
