@@ -61,7 +61,7 @@ var f = function() {
     var t = TESTS.shift();
 
     strtok.parse(
-        new util.TestStream(t[0]),
+        new util.SourceStream(t[0]),
         msgpack.parser(function(v) {
             assert.deepEqual(v, t[1]);
 
