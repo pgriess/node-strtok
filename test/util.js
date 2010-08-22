@@ -80,6 +80,14 @@ var SinkStream = function(bufSz) {
 
         return b;
     };
+
+    self.getString = function() {
+        return getBuffer().toString('binary');
+    };
+
+    self.reset = function() {
+        bufOffset = 0;
+    };
 };
 exports.SinkStream = SinkStream;
 

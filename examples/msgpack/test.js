@@ -49,17 +49,33 @@ var TESTS = [
     'abc',
     'biffo',
     new Buffer('\x01\x02\x03', 'binary'),
-    new Buffer('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\xff', 'binary')
+    new Buffer('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\xff', 'binary'),
+    [],
+    [1, 2, 3, 4],
+    [1, 2, 3, [11, 12, 13], ['a', 'b', 'c']],
+    {},
+    {'abcdef' : 1, 'qqq' : 13, '19' : [1, 2, 3, 4]}
 ];
 
 TESTS.forEach(function(o) {
     var s = new util.SinkStream();
 
     msgpack.generator(s, o);
-    assert.deepEqual(
-        s.getBuffer().toString('binary'),
-        msgpackNative.pack(o).toString('binary')
-    );
+
+    // Do not attempt to verify maps; the orer of (k,v) pairs is arbitrary
+    if (typeof o !== 'object' || Array.isArray(o) || (o instanceof Buffer)) {
+        try {
+            assert.deepEqual(
+                s.getBuffer().toString('binary'),
+                msgpackNative.pack(o).toString('binary')
+            );
+        } catch(e) {
+            console.error('Failed with value: ' + JSON.stringify(o));
+            dumpBuffer(msgpackNative.pack(o));
+            dumpBuffer(s.getBuffer());
+            throw e;
+        }
+    }
 
     var oo = strtok.parse(
         new util.SourceStream(s.getBuffer().toString('binary')),
