@@ -1,6 +1,7 @@
 // Verify that we can read a MsgPack stream.
 
 var assert = require('assert');
+var Buffer = require('buffer').Buffer;
 var strtok = require('../../lib/strtok');
 
 // Generator function for handing to strtok.parse(); takes an accumulator
@@ -98,7 +99,7 @@ var parser = function(acc) {
 
             // negative fixnum
             if ((v & 0xe0) == 0xe0) {
-                acc(-1 * ((v & ~0xe0) + 1));
+                acc(-1 * (~v & 0xff) - 1);
                 break;
             }
 
@@ -120,9 +121,9 @@ var parser = function(acc) {
                 return strtok.UINT32_BE;
             }
 
-            // nil/undefined
+            // null/undefined
             if (v == 0xc0) {
-                acc(undefined);
+                acc(null);
                 break;
             }
 
@@ -250,3 +251,152 @@ var parser = function(acc) {
     };
 };
 exports.parser = parser;
+
+// Write the length component of a 'raw' type
+var writeRawLength = function(s, l) {
+    if (l <= 31) {
+        // fixraw
+        strtok.UINT8.put(s, 0xa0 | l);
+    } else if (l <= 0xffff) {
+        // raw16
+        strtok.UINT8.put(s, 0xda);
+        strtok.UINT16_BE.put(s, l);
+    } else if (l <= 0xffffffff) {
+        // raw32
+        strtok.UINT8.put(s, 0xdb);
+        strtok.UINT32_BE.put(s, l);
+    } else {
+        throw new Error('Raw too large for serialization!');
+    }
+}
+
+var generator = function(s, o) {
+    // Map null to the undefined value
+    o = (o === null) ? undefined : o;
+
+    switch (typeof o) {
+    case 'undefined':
+        strtok.UINT8.put(s, 0xc0);
+        break;
+
+    case 'boolean':
+        strtok.UINT8.put(s, (o) ? 0xc3 : 0xc2);
+        break;
+
+    case 'number':
+        if (o >= 0) {
+            // positive fixnum
+            if (o <= 127) {
+                strtok.UINT8.put(s, o);
+                break;
+            } 
+          
+            // uint8
+            if (o <= 0xff) {
+                strtok.UINT8.put(s, 0xcc);
+                strtok.UINT8.put(s, o);
+                break;
+            }
+
+            // uint16
+            if (o <= 0xffff) {
+                strtok.UINT8.put(s, 0xcd);
+                strtok.UINT16_BE.put(s, o);
+                break;
+            }
+           
+            // uint32
+            if (o <= 0xffffffff) {
+                strtok.UINT8.put(s, 0xce);
+                strtok.UINT32_BE.put(s, o);
+                break;
+            }
+        } else {
+            // negative fixnum
+            if (o >= -32) {
+                strtok.UINT8.put(s, o & 0xff);
+                break;
+            }
+           
+            // int8
+            if (o >= -128) {
+                strtok.UINT8.put(s, 0xd0);
+                strtok.INT8.put(s, o);
+                break;
+            }
+
+            // int16
+            if (o >= -32768) {
+                strtok.UINT8.put(s, 0xd1);
+                strtok.INT16_BE.put(s, o);
+                break;
+            }
+
+            // int32
+            if (o >= -2147483648) {
+                strtok.UINT8.put(s, 0xd2);
+                strtok.INT32_BE.put(s, o);
+                break;
+            }
+        }
+
+        throw new Error('Cannot handle 64-bit numbers');
+   
+    case 'object':
+        if (Array.isArray(o)) {
+            if (o.length <= 15) {
+                // fix array
+                strtok.UINT8.put(s, 0x90 | o.length);
+            } else if (o.length <= 0xffff) {
+                // array16
+                strtok.UINT8.put(s, 0xdc);
+                strtok.UINT16_BE.put(s, o.length);
+            } else if (o.length <= 0xffffffff) {
+                // array32
+                strtok.UINT8.put(s, 0xdd);
+                strtok.UINT32_BE.put(s, o.length);
+            } else {
+                throw new Error('Array too large for serialization!');
+            }
+
+            o.forEach(function(oo) {
+                generator(s, oo);
+            });
+        } else if (o instanceof Buffer) {
+            writeRawLength(s, o.length);
+            s.write(o.toString('binary'), 'binary');
+        } else {
+            var ok = Object.keys(o);
+            if (ok.length <= 15) {
+                // fixmap
+                strtok.UINT8.put(s, 0x80 | ok.length);
+            } else if (ok.length <= 0xffff) {
+                // map16
+                strtok.UINT8.put(s, 0xde);
+                strtok.UINT16_BE.put(s, ok.length);
+            } else if (ok.length <= 0xffffffff) {
+                // map32
+                strtok.UINT8.put(s, 0xdf);
+                strtok.UINT32_BE.put(s, ok.length);
+            } else {
+                throw new Error('Object too large for serialization!');
+            }
+
+            ok.forEach(function(k) {
+                generator(s, k);
+                generator(s, o[k]);
+            });
+        }
+
+        break;
+
+    case 'string':
+        writeRawLength(s, Buffer.byteLength(o, 'utf-8'));
+        s.write(o, 'utf-8');
+        break;
+
+    default:
+        throw new Error('Cannot handle object of type ' + typeof o);
+    }
+};
+exports.generator = generator;
