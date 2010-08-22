@@ -47,4 +47,4 @@ value read earlier.
 
 The MsgPack parser included in `examles/msgpack/msgpack.js` is only 30% or so
 slower than `node-msgpack` when unpacking `{'abcdef' : 1, 'qqq' : 13, '19' :
-[1, 2, 3, 4]}`.
+[1, 2, 3, 4]}`. It packs about 40% slower than `node-msgpack`.
