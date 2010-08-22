@@ -4,6 +4,18 @@ var assert = require('assert');
 var util = require('./util');
 var strtok = require('../lib/strtok');
 
+util.runGenerateTests(
+    [function(s) {
+        strtok.INT32_BE.put(s, 0x00);
+    }, '\x00\x00\x00\x00'],
+    [function(s) {
+        strtok.INT32_BE.put(s, 0x0f0bcca0);
+    }, '\x0f\x0b\xcc\xa0'],
+    [function(s) {
+        strtok.INT32_BE.put(s, -0x0f0bcca0);
+    }, '\xf0\xf4\x33\x60']
+);
+
 util.runParseTests('\x00\x00\x00\x00\xff\xff\xff\xff\x00\x10\x00\xff\x80\x00\x00\x00', [
     function(v) {
         assert.ok(v === undefined);
