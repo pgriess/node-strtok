@@ -5,14 +5,14 @@ var util = require('./util');
 var strtok = require('../lib/strtok');
 
 util.runGenerateTests(
-    [function(s) {
-        strtok.INT32_BE.put(s, 0x00);
+    [function(b) {
+        return strtok.INT32_BE.put(b, 0, 0x00);
     }, '\x00\x00\x00\x00'],
-    [function(s) {
-        strtok.INT32_BE.put(s, 0x0f0bcca0);
+    [function(b) {
+        return strtok.INT32_BE.put(b, 0, 0x0f0bcca0);
     }, '\x0f\x0b\xcc\xa0'],
-    [function(s) {
-        strtok.INT32_BE.put(s, -0x0f0bcca0);
+    [function(b) {
+        return strtok.INT32_BE.put(b, 0, -0x0f0bcca0);
     }, '\xf0\xf4\x33\x60']
 );
 

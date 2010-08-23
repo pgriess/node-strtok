@@ -5,14 +5,14 @@ var util = require('./util');
 var strtok = require('../lib/strtok');
 
 util.runGenerateTests(
-    [function(s) {
-        strtok.INT8.put(s, 0x00);
+    [function(b) {
+        return strtok.INT8.put(b, 0, 0x00);
     }, '\x00'],
-    [function(s) {
-        strtok.INT8.put(s, 0x22);
+    [function(b) {
+        return strtok.INT8.put(b, 0, 0x22);
     }, '\x22'],
-    [function(s) {
-        strtok.INT8.put(s, -0x22);
+    [function(b) {
+        return strtok.INT8.put(b, 0, -0x22);
     }, '\xde']
 );
 

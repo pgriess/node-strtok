@@ -58,15 +58,16 @@ var TESTS = [
 ];
 
 TESTS.forEach(function(o) {
-    var s = new util.SinkStream();
+    var b = new Buffer(1024);
 
-    msgpack.packStream(s, o);
+    var len = msgpack.packBuf(b, 0, o);
+    b = b.slice(0, len);
 
     // Do not attempt to verify maps; the orer of (k,v) pairs is arbitrary
     if (typeof o !== 'object' || Array.isArray(o) || (o instanceof Buffer)) {
         try {
             assert.deepEqual(
-                s.getBuffer().toString('binary'),
+                b.toString('binary'),
                 msgpackNative.pack(o).toString('binary')
             );
         } catch(e) {
@@ -78,7 +79,7 @@ TESTS.forEach(function(o) {
     }
 
     var oo = strtok.parse(
-        new util.SourceStream(s.getBuffer().toString('binary')),
+        new util.SourceStream(b.toString('binary')),
         msgpack.strtokParser(function(oo) {
             try {
                 if (o instanceof Buffer) {

@@ -5,17 +5,17 @@ var util = require('./util');
 var strtok = require('../lib/strtok');
 
 util.runGenerateTests(
-    [function(s) {
-        strtok.UINT16_LE.put(s, 0);
-        strtok.UINT16_LE.put(s, 0xffaa)
+    [function(b) {
+        var len = strtok.UINT16_LE.put(b, 0, 0);
+        return len + strtok.UINT16_LE.put(b, len, 0xffaa)
     }, '\x00\x00\xaa\xff'],
-    [function(s) {
-        strtok.UINT16_BE.put(s, 0xf);
-        strtok.UINT16_BE.put(s, 0xffaa)
+    [function(b) {
+        var len = strtok.UINT16_BE.put(b, 0, 0xf);
+        return len + strtok.UINT16_BE.put(b, len, 0xffaa)
     }, '\x00\x0f\xff\xaa'],
-    [function(s) {
-        strtok.UINT16_BE.put(s, 0xffaa)
-        strtok.UINT16_LE.put(s, 0xffaa)
+    [function(b) {
+        var len = strtok.UINT16_BE.put(b, 0, 0xffaa)
+        return len + strtok.UINT16_LE.put(b, len, 0xffaa)
     }, '\xff\xaa\xaa\xff']
 );
 

@@ -120,11 +120,12 @@ exports.runParseTests = runParseTests;
 // whose first element is a function and second element is a string
 // representing the expected outcome.
 var runGenerateTests = function() {
+    var b = new Buffer(1024);
+
     for (var i = 0; i < arguments.length; i++) {
-        var s = new SinkStream();
-        arguments[i][0](s);
+        var len = arguments[i][0](b);
         assert.strictEqual(
-            s.getBuffer().toString('binary'),
+            b.toString('binary', 0, len),
             arguments[i][1]
         );
     };

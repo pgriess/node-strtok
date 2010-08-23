@@ -5,23 +5,23 @@ var util = require('./util');
 var strtok = require('../lib/strtok');
 
 util.runGenerateTests(
-    [function(s) {
-        strtok.UINT32_LE.put(s, 0);
+    [function(b) {
+        return strtok.UINT32_LE.put(b, 0, 0);
     }, '\x00\x00\x00\x00'],
-    [function(s) {
-        strtok.UINT32_LE.put(s, 0xff);
+    [function(b) {
+        return strtok.UINT32_LE.put(b, 0, 0xff);
     }, '\xff\x00\x00\x00'],
-    [function(s) {
-        strtok.UINT32_BE.put(s, 0);
+    [function(b) {
+        return strtok.UINT32_BE.put(b, 0, 0);
     }, '\x00\x00\x00\x00'],
-    [function(s) {
-        strtok.UINT32_BE.put(s, 0xff);
+    [function(b) {
+        return strtok.UINT32_BE.put(b, 0, 0xff);
     }, '\x00\x00\x00\xff'],
-    [function(s) {
-        strtok.UINT32_LE.put(s, 0xaabbccdd);
+    [function(b) {
+        return strtok.UINT32_LE.put(b, 0, 0xaabbccdd);
     }, '\xdd\xcc\xbb\xaa'],
-    [function(s) {
-        strtok.UINT32_BE.put(s, 0xaabbccdd);
+    [function(b) {
+        return strtok.UINT32_BE.put(b, 0, 0xaabbccdd);
     }, '\xaa\xbb\xcc\xdd']
 );
 

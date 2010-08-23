@@ -253,151 +253,166 @@ var strtokParser = function(acc) {
 exports.strtokParser = strtokParser;
 
 // Write the length component of a 'raw' type
-var writeRawLength = function(s, l) {
+var writeRawLength = function(b, bo, l) {
     if (l <= 31) {
         // fixraw
-        strtok.UINT8.put(s, 0xa0 | l);
+        strtok.UINT8.put(b, bo, 0xa0 | l);
+        return 1;
     } else if (l <= 0xffff) {
         // raw16
-        strtok.UINT8.put(s, 0xda);
-        strtok.UINT16_BE.put(s, l);
+        strtok.UINT8.put(b, bo, 0xda);
+        strtok.UINT16_BE.put(b, bo + 1, l);
+        return 3;
     } else if (l <= 0xffffffff) {
         // raw32
-        strtok.UINT8.put(s, 0xdb);
-        strtok.UINT32_BE.put(s, l);
+        strtok.UINT8.put(b, bo, 0xdb);
+        strtok.UINT32_BE.put(b, bo + 1, l);
+        return 5;
     } else {
         throw new Error('Raw too large for serialization!');
     }
 }
 
-// Pack an object to the given stream
-var packStream = function(s, o) {
-    // Map null to the undefined value
-    o = (o === null) ? undefined : o;
+// Pack an object to the given buffer; returns # bytes written
+var packBuf = function(b, bo, v) {
+    bo = (bo === undefined) ? 0 : bo;
+    v = (v === null) ? undefined : v;
 
-    switch (typeof o) {
+    switch (typeof v) {
     case 'undefined':
-        strtok.UINT8.put(s, 0xc0);
-        break;
+        strtok.UINT8.put(b, bo, 0xc0);
+        return 1;
 
     case 'boolean':
-        strtok.UINT8.put(s, (o) ? 0xc3 : 0xc2);
-        break;
+        strtok.UINT8.put(b, bo, (v) ? 0xc3 : 0xc2);
+        return 1;
 
     case 'number':
-        if (o >= 0) {
+        if (v >= 0) {
             // positive fixnum
-            if (o <= 127) {
-                strtok.UINT8.put(s, o);
-                break;
+            if (v <= 127) {
+                strtok.UINT8.put(b, bo, v);
+                return 1;
             } 
           
             // uint8
-            if (o <= 0xff) {
-                strtok.UINT8.put(s, 0xcc);
-                strtok.UINT8.put(s, o);
-                break;
+            if (v <= 0xff) {
+                strtok.UINT8.put(b, bo, 0xcc);
+                strtok.UINT8.put(b, bo + 1, v);
+                return 2;
             }
 
             // uint16
-            if (o <= 0xffff) {
-                strtok.UINT8.put(s, 0xcd);
-                strtok.UINT16_BE.put(s, o);
-                break;
+            if (v <= 0xffff) {
+                strtok.UINT8.put(b, bo, 0xcd);
+                strtok.UINT16_BE.put(b, bo + 1, v);
+                return 3;
             }
            
             // uint32
-            if (o <= 0xffffffff) {
-                strtok.UINT8.put(s, 0xce);
-                strtok.UINT32_BE.put(s, o);
-                break;
+            if (v <= 0xffffffff) {
+                strtok.UINT8.put(b, bo, 0xce);
+                strtok.UINT32_BE.put(b, bo + 1, v);
+                return 5;
             }
         } else {
             // negative fixnum
-            if (o >= -32) {
-                strtok.UINT8.put(s, o & 0xff);
-                break;
+            if (v >= -32) {
+                strtok.UINT8.put(b, bo, v & 0xff);
+                return 1;
             }
            
             // int8
-            if (o >= -128) {
-                strtok.UINT8.put(s, 0xd0);
-                strtok.INT8.put(s, o);
-                break;
+            if (v >= -128) {
+                strtok.UINT8.put(b, bo, 0xd0);
+                strtok.INT8.put(b, bo + 1, v);
+                return 2;
             }
 
             // int16
-            if (o >= -32768) {
-                strtok.UINT8.put(s, 0xd1);
-                strtok.INT16_BE.put(s, o);
-                break;
+            if (v >= -32768) {
+                strtok.UINT8.put(b, bo, 0xd1);
+                strtok.INT16_BE.put(b, bo + 1, v);
+                return 3;
             }
 
             // int32
-            if (o >= -2147483648) {
-                strtok.UINT8.put(s, 0xd2);
-                strtok.INT32_BE.put(s, o);
-                break;
+            if (v >= -2147483648) {
+                strtok.UINT8.put(b, bo, 0xd2);
+                strtok.INT32_BE.put(b, bo + 1, v);
+                return 5;
             }
         }
 
         throw new Error('Cannot handle 64-bit numbers');
    
     case 'object':
-        if (Array.isArray(o)) {
-            if (o.length <= 15) {
+        var len = 0;
+
+        if (Array.isArray(v)) {
+            if (v.length <= 15) {
                 // fix array
-                strtok.UINT8.put(s, 0x90 | o.length);
-            } else if (o.length <= 0xffff) {
+                strtok.UINT8.put(b, bo, 0x90 | v.length);
+                len = 1;
+            } else if (v.length <= 0xffff) {
                 // array16
-                strtok.UINT8.put(s, 0xdc);
-                strtok.UINT16_BE.put(s, o.length);
-            } else if (o.length <= 0xffffffff) {
+                strtok.UINT8.put(b, bo, 0xdc);
+                strtok.UINT16_BE.put(b, bo + 1, v.length);
+                len = 3;
+            } else if (v.length <= 0xffffffff) {
                 // array32
-                strtok.UINT8.put(s, 0xdd);
-                strtok.UINT32_BE.put(s, o.length);
+                strtok.UINT8.put(b, bo, 0xdd);
+                strtok.UINT32_BE.put(b, bo + 1, v.length);
+                len = 5;
             } else {
                 throw new Error('Array too large for serialization!');
             }
 
-            o.forEach(function(oo) {
-                packStream(s, oo);
+            v.forEach(function(vv) {
+                len += packBuf(b, bo + len, vv);
             });
-        } else if (o instanceof Buffer) {
-            writeRawLength(s, o.length);
-            s.write(o.toString('binary'), 'binary');
+        } else if (v instanceof Buffer) {
+            var len = writeRawLength(b, bo, v.length);
+            v.copy(b, bo + len, 0, v.length);
+            len += v.length;
         } else {
-            var ok = Object.keys(o);
-            if (ok.length <= 15) {
+            var vk = Object.keys(v);
+            if (vk.length <= 15) {
                 // fixmap
-                strtok.UINT8.put(s, 0x80 | ok.length);
-            } else if (ok.length <= 0xffff) {
+                strtok.UINT8.put(b, bo, 0x80 | vk.length);
+                len = 1;
+            } else if (vk.length <= 0xffff) {
                 // map16
-                strtok.UINT8.put(s, 0xde);
-                strtok.UINT16_BE.put(s, ok.length);
-            } else if (ok.length <= 0xffffffff) {
+                strtok.UINT8.put(b, bo, 0xde);
+                strtok.UINT16_BE.put(b, bo + 1, vk.length);
+                len = 3;
+            } else if (vk.length <= 0xffffffff) {
                 // map32
-                strtok.UINT8.put(s, 0xdf);
-                strtok.UINT32_BE.put(s, ok.length);
+                strtok.UINT8.put(b, bo, 0xdf);
+                strtok.UINT32_BE.put(b, bo + 1, vk.length);
+                len = 5;
             } else {
                 throw new Error('Object too large for serialization!');
             }
 
-            ok.forEach(function(k) {
-                packStream(s, k);
-                packStream(s, o[k]);
+            vk.forEach(function(k) {
+                len += packBuf(b, bo + len, k);
+                len += packBuf(b, bo + len, v[k]);
             });
         }
 
-        break;
+        return len;
 
     case 'string':
-        writeRawLength(s, Buffer.byteLength(o, 'utf-8'));
-        s.write(o, 'utf-8');
-        break;
+        var len = 0;
+
+        len += writeRawLength(b, bo, Buffer.byteLength(v, 'utf-8'));
+        len += b.write(v, bo + len, 'utf-8');
+
+        return len;
 
     default:
-        throw new Error('Cannot handle object of type ' + typeof o);
+        throw new Error('Cannot handle object of type ' + typeof v);
     }
 };
-exports.packStream = packStream;
+exports.packBuf = packBuf;
