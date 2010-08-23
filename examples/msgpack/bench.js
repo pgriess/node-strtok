@@ -8,95 +8,144 @@ var strtokMsgpack = require('./msgpack');
 var sys = require('sys');
 var util = require('../../test/util');
 
-var NUM_OBJS = 100000;
+var NUM_OBJS = 1000000;
+var OBJ_TEMPLATE = {'abcdef' : 1, 'qqq' : 13, '19' : [1, 2, 3, 4]};
 
-var o = {'abcdef' : 1, 'qqq' : 13, '19' : [1, 2, 3, 4]};
-// var o = [1, 2, 3, 4, 5, 6, 7, 8, [1, 2, 3, 4, 5, 6, 7, 8]];
-// var o = {'abcdef' : 1};
-var buf = nodeMsgpack.pack(o);
+var TYPE_CBS = [
+    ['json',
+        
+        // pack
+        (function() {
+            var objs = [];
+            for (var i = 0; i < NUM_OBJS; i++) {
+                objs.push(JSON.parse(JSON.stringify(OBJ_TEMPLATE)));
+            }
 
-var StaticStream = function() {
-    EventEmitter.call(this);
-};
-sys.inherits(StaticStream, EventEmitter);
+            var i = 0;
+            return function() {
+                return JSON.stringify(objs[++i % NUM_OBJS]);
+            }
+        })(),
 
-var ss = new util.SinkStream();
+        // unpack
+        (function() {
+            var str = JSON.stringify(OBJ_TEMPLATE);
 
-var pack_f = function(i, useNative, cb) {
-    if (i >= NUM_OBJS) {
-        cb();
-        return;
+            return function(cb) {
+                process.nextTick(function() {
+                    JSON.parse(str);
+                    cb();
+                });
+            };
+        })()
+    ],
+
+    ['native',
+
+        // pack
+        function() {
+            nodeMsgpack.pack(OBJ_TEMPLATE);
+        },
+
+        // unpack
+        (function() {
+            var buf = nodeMsgpack.pack(OBJ_TEMPLATE);
+
+            return function(cb) {
+                var e = new EventEmitter();
+
+                e.on('data', function(b) {
+                    nodeMsgpack.unpack(b);
+                    cb();
+                });
+
+                process.nextTick(function() {
+                    e.emit('data', buf);
+                    e.emit('end');
+                });
+            }
+        })()
+    ],
+
+    ['strtok',
+
+        // pack
+        (function() {
+            var s = new util.SinkStream();
+
+            return function() {
+                s.reset();
+                strtokMsgpack.packStream(s, OBJ_TEMPLATE);
+            };
+        })(),
+
+        // unpack
+        (function() {
+            var buf = nodeMsgpack.pack(OBJ_TEMPLATE);
+
+            return function(cb) {
+                var e = new EventEmitter();
+                var tag = Math.random();
+                strtok.parse(e, strtokMsgpack.strtokParser(function (v) {
+                    cb();
+                }));
+
+                process.nextTick(function() {
+                    e.emit('data', buf);
+                    e.emit('end');
+                });
+            };
+        })()
+    ]
+];
+
+var jsonPack, jsonUnpack;
+
+function benchmarkType(typeNum) {
+    var name = TYPE_CBS[typeNum][0];
+    var pack = TYPE_CBS[typeNum][1];
+    var unpack = TYPE_CBS[typeNum][2];
+
+    console.log(name);
+
+    // Pack
+    var begin = Date.now();
+    for (var i = 0; i < NUM_OBJS; i++) {
+        pack();
     }
 
-    ss.reset();
-
-    if (useNative) {
-        var b = nodeMsgpack.pack(o);
-        // assert.deepEqual(b.toString('binary'), buf.toString('binary'));
-    } else {
-        strtokMsgpack.generator(ss, o);
-        // assert.deepEqual(s.getString(), buf.toString('binary'));
+    var packTime = (Date.now() - begin)
+    if (typeNum === 0) {
+        jsonPack = packTime;
     }
+    console.log(
+        '  pack:   ' + packTime + ' ms ' +
+        '(' + Math.round(((100 * packTime) / jsonPack)) + '% of json)'
+    );
 
-    process.nextTick(function() {
-        pack_f(i + 1, useNative, cb);
-    });
-};
-
-var pack_g = function(useNative) {
-    var d = Date.now();
-
-    return function() {
-        console.log('pack ' + ((useNative) ? 'native: ' : 'js:     ')
-            + (Date.now() - d) + 'ms');
-
-        if (useNative) {
-            pack_f(0, !useNative, pack_g(!useNative));
-        } else {
-            unpack_f(0, true, unpack_g(true));
+    // Unpack
+    begin = Date.now();
+    var i = 0;
+    var unpackCB = function() {
+        if (++i < NUM_OBJS) {
+            unpack(unpackCB);
+            return;
         }
-    }
-};
 
-var unpack_f = function(i, useNative, cb) {
-    if (i >= NUM_OBJS) {
-        cb();
-        return;
-    }
+        var unpackTime = (Date.now() - begin);
+        if (typeNum === 0) {
+            jsonUnpack = unpackTime;
+        }
 
-    s = new StaticStream();
-    if (useNative) {
-        s.on('data', function(b) {
-            var v = nodeMsgpack.unpack(b);
-            // assert.deepEqual(v, o);
-            unpack_f(i + 1, useNative, cb);
-        });
-    } else {
-        strtok.parse(
-            s,
-            strtokMsgpack.parser(function(v) {
-                // assert.deepEqual(v, o);
-                unpack_f(i + 1, useNative, cb);
-            })
+        console.log(
+            '  unpack: ' + unpackTime + ' ms ' +
+            '(' + Math.round(((100 * unpackTime) / jsonUnpack)) + '% of json)'
         );
-    }
-    process.nextTick(function() {
-        s.emit('data', buf);
-        s.emit('end');
-    });
-};
+        console.log();
 
-var unpack_g = function(useNative) {
-    var d = Date.now();
-
-    return function() {
-        console.log('unpack ' + ((useNative) ? 'native: ' : 'js:     ')
-            + (Date.now() - d) + 'ms');
-
-        if (useNative) {
-            unpack_f(0, !useNative, unpack_g(!useNative));
-        }
+        benchmarkType(++typeNum % TYPE_CBS.length);
     };
+    unpack(unpackCB);
 };
 
-pack_f(0, true, pack_g(true));
+benchmarkType(0);
