@@ -6,7 +6,7 @@ var strtok = require('../../lib/strtok');
 
 // Generator function for handing to strtok.parse(); takes an accumulator
 // callback to invoke when a top-level type is read from the stream
-var parser = function(acc) {
+var strtokParser = function(acc) {
     // Type that we're in when reading a primitive; MSGPACK_* values
     var type = undefined;
 
@@ -250,7 +250,7 @@ var parser = function(acc) {
         return strtok.UINT8;
     };
 };
-exports.parser = parser;
+exports.strtokParser = strtokParser;
 
 // Write the length component of a 'raw' type
 var writeRawLength = function(s, l) {
@@ -270,7 +270,8 @@ var writeRawLength = function(s, l) {
     }
 }
 
-var generator = function(s, o) {
+// Pack an object to the given stream
+var packStream = function(s, o) {
     // Map null to the undefined value
     o = (o === null) ? undefined : o;
 
@@ -360,7 +361,7 @@ var generator = function(s, o) {
             }
 
             o.forEach(function(oo) {
-                generator(s, oo);
+                packStream(s, oo);
             });
         } else if (o instanceof Buffer) {
             writeRawLength(s, o.length);
@@ -383,8 +384,8 @@ var generator = function(s, o) {
             }
 
             ok.forEach(function(k) {
-                generator(s, k);
-                generator(s, o[k]);
+                packStream(s, k);
+                packStream(s, o[k]);
             });
         }
 
@@ -399,4 +400,4 @@ var generator = function(s, o) {
         throw new Error('Cannot handle object of type ' + typeof o);
     }
 };
-exports.generator = generator;
+exports.packStream = packStream;
