@@ -95,3 +95,35 @@ TESTS.forEach(function(o) {
         })
     );
 });
+
+// Test for 'flush' argument to pack().
+//
+// Do this by creating a large backing buffer and a flush function that will
+// flush a smaller buffer to it when full. Pass this second smaller buffer
+// to msgpack.pack(). Run this several times with all possible sizes that
+// would accommodate our structure.
+var obj = [1, 2, -134, 19, 177, 'abcd', 280, -199534, 'abcdef'];
+var objPack = msgpackNative.pack(obj);
+
+for (var i = 7; i <= objPack.length; i++) {
+    var bigBuf = new Buffer(1024);
+    var bigOff = 0;
+    var buf = new Buffer(i);
+    var len = msgpack.pack(undefined, buf, 0, obj, function(b, o) {
+        bigOff += b.copy(bigBuf, bigOff, 0, o);
+    });
+    bigOff += buf.copy(bigBuf, bigOff, 0, len);
+    assert.deepEqual(
+        bigBuf.slice(0, bigOff).toString('binary'),
+        objPack.toString('binary')
+    );
+}
+
+// Test that we're properly bounds-checking our handling of string and
+// Buffer primitives, as this happens above strtok.
+assert.throws(function() {
+    msgpack.pack(undefined, new Buffer(5), 0, 'abcdef');
+});
+assert.throws(function() {
+    msgpack.pack(undefined, new Buffer(5), 0, new Buffer('abcdef'));
+});
