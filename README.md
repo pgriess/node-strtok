@@ -45,6 +45,16 @@ value read earlier.
 
 ## Performance
 
-The MsgPack parser included in `examles/msgpack/msgpack.js` is only 30% or so
-slower than `node-msgpack` when unpacking `{'abcdef' : 1, 'qqq' : 13, '19' :
-[1, 2, 3, 4]}`. It packs about 40% slower than `node-msgpack`.
+An example run of the built-in `examples/msgpack/bench.js`:
+
+    json
+      pack:   14674 ms (100% of json)
+      unpack: 50479 ms (100% of json)
+
+    native
+      pack:   15334 ms (104% of json)
+      unpack: 32835 ms (65% of json)
+
+    strtok
+      pack:   15861 ms (108% of json)
+      unpack: 46650 ms (92% of json)
