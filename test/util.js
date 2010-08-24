@@ -90,6 +90,15 @@ var SinkStream = function(bufSz) {
 };
 exports.SinkStream = SinkStream;
 
+var NullStream = function() {
+    var self = this;
+
+    self.write = function() {
+        return true;
+    };
+};
+exports.NullStream = NullStream;
+
 // Run the given stream (or string, coverted into a SourceStream) through
 // strtok,parse() and verify types that come back using the given state
 // table.

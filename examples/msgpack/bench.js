@@ -71,10 +71,10 @@ var TYPE_CBS = [
 
         // pack
         (function() {
-            var b = new Buffer(1024);
+            var s = new util.NullStream();
 
             return function() {
-                strtokMsgpack.packBuf(b, 0, OBJ_TEMPLATE);
+                strtokMsgpack.packStream(s, OBJ_TEMPLATE);
             };
         })(),
 
