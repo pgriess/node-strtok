@@ -68,7 +68,6 @@ var SinkStream = function(bufSz) {
             buf.write(arguments[0], bufOffset, arguments[1]);
         } else {
             arguments[0].copy(buf, bufOffset, 0, arguments[0].length);
-            bufOffset += arguments[0].length;
         }
 
         bufOffset += bl;
