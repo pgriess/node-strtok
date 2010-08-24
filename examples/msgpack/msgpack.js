@@ -280,7 +280,7 @@ var pack = function(s, b, bo, v, flush) {
     v = (v === null) ? undefined : v;
     flush = (flush === undefined && s !== undefined) ?
         function(b, o) {
-            s.write(b.toString('binary', 0, o));
+            s.write(b.toString('binary', 0, o), 'binary');
         } : flush;
 
     switch (typeof v) {
@@ -441,3 +441,15 @@ var packBuf = function(b, bo, v) {
     return pack(undefined /* stream */, b, bo, v, undefined /* flush */);
 };
 exports.packBuf = packBuf;
+
+var packStream = function(s, v) {
+    var off = pack(
+        s, undefined /* buf */, undefined /* buf offset */, v,
+        function(b, bo) {
+            s.write(b.toString('binary', 0, bo), 'binary');
+        }
+    );
+
+    s.write(PACKBUF.toString('binary', 0, off), 'binary');
+};
+exports.packStream = packStream;

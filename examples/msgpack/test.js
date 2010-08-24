@@ -127,3 +127,11 @@ assert.throws(function() {
 assert.throws(function() {
     msgpack.pack(undefined, new Buffer(5), 0, new Buffer('abcdef'));
 });
+
+// Test the 'stream' argument to pack().
+var ss = new util.SinkStream();
+msgpack.packStream(ss, obj);
+assert.deepEqual(
+    ss.getString(),
+    objPack.toString('binary')
+);
