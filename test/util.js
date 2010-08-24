@@ -81,7 +81,7 @@ var SinkStream = function(bufSz) {
     };
 
     self.getString = function() {
-        return getBuffer().toString('binary');
+        return self.getBuffer().toString('binary');
     };
 
     self.reset = function() {
