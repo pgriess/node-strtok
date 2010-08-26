@@ -25,7 +25,7 @@ The `node-strtok` library has only one method: `parse()`.  This method takes a
 callback, which is invoked when a complete token has been read from the stream.
 The callback takes a single argument: the token just read from the stream, and
 is expected to return the type of token to read from the stream next (e.g.
-`strtok.UINT32_BE). It is this callback that ultimately implements the
+`strtok.UINT32_BE`). It is this callback that ultimately implements the
 application protocol, consuming the provided tokens and instructing
 `node-strtok` the type of the next token to read. It is this inverted control
 flow that allows `node-strtok` to function efficiently as an interruptable
