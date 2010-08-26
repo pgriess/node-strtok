@@ -80,7 +80,7 @@ be invoked with the desired token type once the protocol layer has figured this
 out. Note that between the time `DEFER` is returned and the callback is
 invoked, `strtok.parse()` is buffering all data received from the stream.
 
-### Complex tokens
+#### Complex tokens
 
 The token types returned from the protocol callback are simply objects with
 1) a `get()` method that takes a `Buffer` and an offset and returns the token
