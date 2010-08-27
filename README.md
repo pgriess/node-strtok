@@ -65,11 +65,20 @@ primitives. Maybe this will change later if this becomes important.
 #### Special tokens
 
 There are a handful of "special" tokens which have special meaning when
-returned from the protocol callback: `DONE` and `DEFER`. The `DONE` token
-indicates to `strtok.parse()` that the protocol parsing loop has come to an
-end, and that no more data need be read off of the stream. This causes
-`strtok.parse()` to disengage from the stream. The callback will not be
-invoked again.
+returned from the protocol callback: `DONE` and `DEFER`. 
+
+The `DONE` token indicates to `strtok.parse()` that the protocol parsing loop
+has come to an end, and that no more data need be read off of the stream. This
+causes `strtok.parse()` to disengage from the stream. The callback will not be
+invoked again. In addition, upon receiving `DONE`, `strtok.parse()` may have
+excess data buffers which it has pulled off of the stream, but which it did not
+consume while being directed by the protocol callback. Rather than dropping
+this data on the floor, `strtok.parse()` will synthesize and emit `data` events
+on the stream which it was operating on. The idea is to facilitate protocol
+stacks which want to use `node-strtok` to parse some portion of the protocol
+and then hand off processing to some other codepath(s). In this case, it is
+expected that the protocol callback will add `data` event listeners to the
+stream immediately before returning `DONE`.
 
 The `DEFER` token indicates that the protocol doesn't know what type of token
 to read from the stream next. Perhaps the protocol needs to consult some
