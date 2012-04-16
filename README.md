@@ -3,7 +3,7 @@ A streaming tokenizer for [NodeJS](http://nodejs.org).
 Parsing data coming off the wire in an event-driven environment can be a
 difficult proposition, with naive implementations buffering all received data
 in memory until a message has been received in its entirety. Not only is this
-infficient from a memory standpoint, but it may not be possible to determine
+inefficient from a memory standpoint, but it may not be possible to determine
 the that a message has been fully received without attempting to parse it.
 This requires a parser that can gracefully handle incomplete messages and
 pick up where it left off. To make this task easier, `node-strtok` provides
