@@ -1,22 +1,21 @@
 {
-    "name" : "strtok",
-    "version" : "0.1.0",
-    "description" : "A streaming tokenizer",
-    "author" : "Peter Griess <pg@std.in>",
-    "engines" : {
-        "node" : ">=0.1.98"
-    },
-    "repositories" : [
-        {
-            "type" : "git",
-            "url" : "http://github.com/pgriess/node-strtok"
-        }
-    ],
-    "licenses" : [
-        {
-            "type" : "BSD",
-            "url" : "http://github.com/pgriess/node-strtok/blob/master/LICENSE"
-        }
-    ],
-    "main" : "./lib/strtok.js"
+  "name": "strtok",
+  "version": "0.1.0",
+  "description": "A streaming tokenizer",
+  "author": "Peter Griess <pg@std.in>",
+  "scripts": {
+    "test": "find test/ -name 'test-*.js' -exec node {} \\;"
+  },
+  "engines": {
+    "node": ">=0.1.98"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/pgriess/node-strtok"
+  },
+  "license": {
+    "type": "BSD",
+    "url": "http://github.com/pgriess/node-strtok/blob/master/LICENSE"
+  },
+  "main": "./lib/strtok.js"
 }
