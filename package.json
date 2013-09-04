@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "A streaming tokenizer",
   "author": "Peter Griess <pg@std.in>",
+  "scripts": {
+    "test": "find test/ -name 'test-*.js' -exec node {} \\;"
+  },
   "engines": {
     "node": ">=0.1.98"
   },
