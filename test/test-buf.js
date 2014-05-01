@@ -19,3 +19,6 @@ util.runParseTests('\x05peter', [
         return strtok.DONE;
     }
 ]);
+
+assert.throws(function() { new strtok.BufferType(NaN); }, Error);
+assert.throws(function() { new strtok.BufferType(-1); }, Error);
